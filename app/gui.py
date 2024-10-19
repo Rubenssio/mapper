@@ -1,67 +1,124 @@
 import tkinter as tk
-from tkinter import ttk, filedialog
-from PIL import Image, ImageTk  # For icons (Pillow library)
-
-# Create the main window
-root = tk.Tk()
-root.title("Mapper")
-root.geometry("500x400")
-
-# Create Notebook (for tabs)
-notebook = ttk.Notebook(root)
-notebook.pack(expand=True, fill='both')
-
-# Define the icons (assuming you have 'folder.png' and 'excel.png' icons in the same folder)
-folder_icon = ImageTk.PhotoImage(Image.open("resources/folder.png").resize((20, 20)))
-excel_icon = ImageTk.PhotoImage(Image.open("resources/excel.png").resize((20, 20)))
-
-# --- Input Tab ---
-input_tab = ttk.Frame(notebook)
-notebook.add(input_tab, text="Input")
+from tkinter import ttk, filedialog, messagebox
+from app.processing import run_processing
 
 
-# Input Folder Section
-def select_input_folder():
-    folder_selected = filedialog.askdirectory()
-    if folder_selected:
-        input_folder_label.config(text=folder_selected)
-        input_folder_label_img.config(image=folder_icon)
+class InputTab(tk.Frame):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.input_folder = tk.StringVar(value="")
+        self.template_file = tk.StringVar(value="")
+        self.mapping_file = tk.StringVar(value="")
+
+        self.create_widgets()
+
+    def create_widgets(self):
+        frame = self
+
+        # Input Folder Selection
+        tk.Button(frame, text="Select Input Folder", command=self.select_input_folder).grid(
+            row=0, column=0, sticky="w", padx=5, pady=(10, 5)
+        )
+        tk.Label(frame, textvariable=self.input_folder).grid(row=1, column=0, sticky="w", padx=5, pady=(0, 10))
+
+        # Template File Selection
+        tk.Button(frame, text="Select Template File", command=self.select_template_file).grid(
+            row=2, column=0, sticky="w", padx=5, pady=(10, 5)
+        )
+        tk.Label(frame, textvariable=self.template_file).grid(row=3, column=0, sticky="w", padx=5, pady=(0, 10))
+
+        # Mapping File Selection
+        tk.Button(frame, text="Select Mapping CSV", command=self.select_mapping_file).grid(
+            row=4, column=0, sticky="w", padx=5, pady=(10, 5)
+        )
+        tk.Label(frame, textvariable=self.mapping_file).grid(row=5, column=0, sticky="w", padx=5, pady=(0, 10))
+
+    def select_input_folder(self):
+        folder_path = filedialog.askdirectory(title="Select Input Folder")
+        if folder_path:
+            self.input_folder.set(folder_path)
+
+    def select_template_file(self):
+        file_path = filedialog.askopenfilename(title="Select Template File", filetypes=[("Excel files", "*.xlsx")])
+        if file_path:
+            self.template_file.set(file_path)
+
+    def select_mapping_file(self):
+        file_path = filedialog.askopenfilename(title="Select Mapping CSV", filetypes=[("CSV files", "*.csv")])
+        if file_path:
+            self.mapping_file.set(file_path)
 
 
-input_folder_btn = ttk.Button(input_tab, text="Select Input Folder", command=select_input_folder)
-input_folder_btn.pack(pady=10)
+class OutputTab(tk.Frame):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.output_folder = tk.StringVar(value="")
 
-input_folder_frame = tk.Frame(input_tab)
-input_folder_frame.pack(pady=5)
-input_folder_label_img = tk.Label(input_folder_frame)
-input_folder_label_img.pack(side="left")
-input_folder_label = tk.Label(input_folder_frame, text="No folder selected")
-input_folder_label.pack(side="left")
+        self.create_widgets()
+
+    def create_widgets(self):
+        frame = self
+
+        # Output Folder Selection
+        tk.Button(frame, text="Select Output Folder", command=self.select_output_folder).grid(
+            row=0, column=0, sticky="w", padx=5, pady=(10, 5)
+        )
+        tk.Label(frame, textvariable=self.output_folder).grid(
+            row=1, column=0, sticky="w", padx=5, pady=(0, 10)
+        )
+
+        # Start Button
+        tk.Button(frame, text="Start Processing", command=self.master.master.start_processing).grid(
+            row=2, column=0, sticky="w", padx=5, pady=(50, 0)
+        )
+
+    def select_output_folder(self):
+        folder_path = filedialog.askdirectory(title="Select Output Folder")
+        if folder_path:
+            self.output_folder.set(folder_path)
 
 
-# Template File Section
-def select_template_file():
-    file_selected = filedialog.askopenfilename(filetypes=[("Excel files", "*.xlsx")])
-    if file_selected:
-        template_file_label.config(text=file_selected)
-        template_file_label_img.config(image=excel_icon)
+class MapperApp(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("Mapper")
+        self.geometry("400x300")
+
+        # Create Tab Control
+        self.tab_control = ttk.Notebook(self)
+        self.input_tab = InputTab(self.tab_control)
+        self.output_tab = OutputTab(self.tab_control)
+
+        self.tab_control.add(self.input_tab, text="Input")
+        self.tab_control.add(self.output_tab, text="Output")
+        self.tab_control.pack(expand=1, fill="both")
+
+    def start_processing(self):
+        # Fetch user inputs from both tabs
+        input_folder = self.input_tab.input_folder.get()
+        template_file = self.input_tab.template_file.get()
+        mapping_file = self.input_tab.mapping_file.get()
+        output_folder = self.output_tab.output_folder.get()
+
+        # Check if all fields are provided
+        if not input_folder or not template_file or not mapping_file or not output_folder:
+            messagebox.showerror("Missing Input", "Please ensure all input fields are filled.")
+            return
+
+        append_text = "processed"
+
+        try:
+            # Call the processing logic
+            run_processing(input_folder, template_file, mapping_file, output_folder, append_text)
+
+            # Display success message
+            messagebox.showinfo("Success", "Processing complete! Files have been saved to the output folder.")
+
+        except Exception as e:
+            # Handle any errors
+            messagebox.showerror("Error", f"An error occurred during processing: {str(e)}")
 
 
-template_file_btn = ttk.Button(input_tab, text="Select Template File", command=select_template_file)
-template_file_btn.pack(pady=10)
-
-template_file_frame = tk.Frame(input_tab)
-template_file_frame.pack(pady=5)
-template_file_label_img = tk.Label(template_file_frame)
-template_file_label_img.pack(side="left")
-template_file_label = tk.Label(template_file_frame, text="No file selected")
-template_file_label.pack(side="left")
-
-# --- Add the remaining tabs for Mappings and Output ---
-mappings_tab = ttk.Frame(notebook)
-notebook.add(mappings_tab, text="Mappings")
-
-output_tab = ttk.Frame(notebook)
-notebook.add(output_tab, text="Output")
-
-root.mainloop()
+if __name__ == "__main__":
+    app = MapperApp()
+    app.mainloop()
