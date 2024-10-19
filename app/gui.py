@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
-from app.processing import run_processing
+from processing import run_processing
 
 
 class InputTab(tk.Frame):
