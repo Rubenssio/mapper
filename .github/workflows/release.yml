@@ -49,8 +49,8 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: dist/mapper.exe  # Path to the built executable file
-          tag_name: "v1.0.0"  # Version 1.0
-          name: "Mapper v1.0.0"
+          tag_name: "v1.1.0"  # Version 1.1
+          name: "Mapper v1.1.0"
           draft: false
           prerelease: false
         env:
