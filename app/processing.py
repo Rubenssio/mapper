@@ -17,11 +17,11 @@ def load_mappings(mapping_file):
 def process_file(input_file, template_file, mappings):
     # Load input Excel file
     input_wb = load_workbook(input_file)
-    input_ws = input_wb.active  # Assuming data is in the first sheet
+    input_ws = input_wb['Card']  # Select sheet by name
 
     # Load template Excel file
     template_wb = load_workbook(template_file)
-    template_ws = template_wb.active  # Assuming single sheet
+    template_ws = template_wb['Main']  # Select sheet by name
 
     # Apply mappings: copy from input to template
     for input_cell, output_cell in mappings.items():
@@ -37,7 +37,7 @@ def save_output(output_folder, output_file_name, workbook):
 
 
 def process_all_files(input_folder, template_file, mappings, output_folder, append_text=""):
-    input_files = [f for f in os.listdir(input_folder) if f.endswith(('.xlsx', '.xls'))]
+    input_files = [f for f in os.listdir(input_folder) if f.endswith(('.xlsx', '.xls', 'xlsm'))]
 
     for input_file in input_files:
         input_path = os.path.join(input_folder, input_file)
