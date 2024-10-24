@@ -39,7 +39,9 @@ class InputTab(tk.Frame):
             self.input_folder.set(folder_path)
 
     def select_template_file(self):
-        file_path = filedialog.askopenfilename(title="Select Template File", filetypes=[("Excel files", "*.xlsx")])
+        file_path = filedialog.askopenfilename(
+            title="Select Template File",
+            filetypes=[("Excel files", "*.xlsx *.xlsm")])
         if file_path:
             self.template_file.set(file_path)
 

@@ -37,7 +37,7 @@ def save_output(output_folder, output_file_name, workbook):
 
 
 def process_all_files(input_folder, template_file, mappings, output_folder, append_text=""):
-    input_files = [f for f in os.listdir(input_folder) if f.endswith(('.xlsx', '.xls'))]
+    input_files = [f for f in os.listdir(input_folder) if f.endswith(('.xlsx', '.xls', 'xlsm'))]
 
     for input_file in input_files:
         input_path = os.path.join(input_folder, input_file)
