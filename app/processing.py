@@ -17,11 +17,11 @@ def load_mappings(mapping_file):
 def process_file(input_file, template_file, mappings):
     # Load input Excel file
     input_wb = load_workbook(input_file)
-    input_ws = input_wb.active  # Assuming data is in the first sheet
+    input_ws = input_wb['Card']  # Select sheet by name
 
     # Load template Excel file
     template_wb = load_workbook(template_file)
-    template_ws = template_wb.active  # Assuming single sheet
+    template_ws = template_wb['Main']  # Select sheet by name
 
     # Apply mappings: copy from input to template
     for input_cell, output_cell in mappings.items():
