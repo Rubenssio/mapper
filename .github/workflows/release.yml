@@ -42,15 +42,14 @@ jobs:
       - name: Build executable
         run: |
           pip install pyinstaller  # Ensure PyInstaller is installed
-          pyinstaller --onefile --name mapper app/gui.py  # Output will be mapper.exe
-          pyinstaller --onefile --noconsole --name mapper app/gui.py  # Output will be mapper.exe
           #  removing `--onefile` might help with false positives with antivirus softwares
+          pyinstaller --onefile --noconsole --name mapper_v1.1.0 app/gui.py  # Output will be mapper.exe
 
       # Upload the built .exe file as a release asset
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: dist/mapper.exe  # Path to the built executable file
+          files: dist/mapper_v1.1.0.exe  # Path to the built executable file
           tag_name: "v1.1.0"  # Version 1.1
           name: "Mapper v1.1.0"
           draft: false
