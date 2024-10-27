@@ -46,7 +46,7 @@ def process_all_files(input_folder, template_file, mappings, output_folder, appe
         processed_workbook = process_file(input_path, template_file, mappings)
 
         # Generate output file name (original name + append text)
-        output_file_name = f"{os.path.splitext(input_file)[0]}{append_text}.xlsx"
+        output_file_name = f"{os.path.splitext(input_file)[0]}{append_text}.xlsm"
 
         # Save the processed file to the output folder
         save_output(output_folder, output_file_name, processed_workbook)
