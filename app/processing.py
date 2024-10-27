@@ -36,6 +36,15 @@ def save_output(output_folder, output_file_name, workbook):
     workbook.save(output_path)
 
 
+def clear_external_links(workbook):
+    """
+    This function attempts to remove any external data connections in the workbook.
+    """
+    # Remove external links if present
+    if hasattr(workbook, 'externals'):
+        del workbook.externals
+
+
 def process_all_files(input_folder, template_file, mappings, output_folder, append_text=""):
     input_files = [f for f in os.listdir(input_folder) if f.endswith(('.xlsx', '.xls', 'xlsm'))]
 
@@ -44,6 +53,9 @@ def process_all_files(input_folder, template_file, mappings, output_folder, appe
 
         # Process the input file with the template
         processed_workbook = process_file(input_path, template_file, mappings)
+
+        # Clear any external links
+        clear_external_links(processed_workbook)
 
         # Generate output file name (original name + append text)
         output_file_name = f"{os.path.splitext(input_file)[0]}{append_text}.xlsx"
