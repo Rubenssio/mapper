@@ -54,6 +54,7 @@ class InputTab(tk.Frame):
 class OutputTab(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
+        self.suffix_entry = None
         self.output_folder = tk.StringVar(value="")
 
         self.create_widgets()
@@ -69,9 +70,17 @@ class OutputTab(tk.Frame):
             row=1, column=0, sticky="w", padx=5, pady=(0, 10)
         )
 
+        # Suffix Entry Box
+        tk.Label(frame, text="Output File Suffix:").grid(
+            row=2, column=0, sticky="w", padx=5, pady=(10, 5)
+        )
+        self.suffix_entry = tk.Entry(frame)
+        self.suffix_entry.insert(0, "_processed")  # Default value
+        self.suffix_entry.grid(row=3, column=0, sticky="w", padx=5, pady=(0, 10))
+
         # Start Button
         tk.Button(frame, text="Start Processing", command=self.master.master.start_processing).grid(
-            row=2, column=0, sticky="w", padx=5, pady=(50, 0)
+            row=4, column=0, sticky="w", padx=5, pady=(50, 0)
         )
 
     def select_output_folder(self):
@@ -101,17 +110,22 @@ class MapperApp(tk.Tk):
         template_file = self.input_tab.template_file.get()
         mapping_file = self.input_tab.mapping_file.get()
         output_folder = self.output_tab.output_folder.get()
+        append_text = self.output_tab.suffix_entry.get()
 
         # Check if all fields are provided
         if not input_folder or not template_file or not mapping_file or not output_folder:
             messagebox.showerror("Missing Input", "Please ensure all input fields are filled.")
             return
 
-        append_text = "processed"
-
         try:
             # Call the processing logic
-            run_processing(input_folder, template_file, mapping_file, output_folder, append_text)
+            run_processing(
+                input_folder,
+                template_file,
+                mapping_file,
+                output_folder,
+                append_text,
+            )
 
             # Display success message
             messagebox.showinfo("Success", "Processing complete! Files have been saved to the output folder.")
