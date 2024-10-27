@@ -46,7 +46,7 @@ def process_all_files(input_folder, template_file, mappings, output_folder, appe
         processed_workbook = process_file(input_path, template_file, mappings)
 
         # Generate output file name (original name + append text)
-        output_file_name = f"{os.path.splitext(input_file)[0]}_{append_text}.xlsx"
+        output_file_name = f"{os.path.splitext(input_file)[0]}{append_text}.xlsx"
 
         # Save the processed file to the output folder
         save_output(output_folder, output_file_name, processed_workbook)
@@ -54,6 +54,6 @@ def process_all_files(input_folder, template_file, mappings, output_folder, appe
         print(f"Processed: {input_file} -> {output_file_name}")
 
 
-def run_processing(input_folder, template_file, mapping_file, output_folder, append_text="processed"):
+def run_processing(input_folder, template_file, mapping_file, output_folder, append_text="_processed"):
     mappings = load_mappings(mapping_file)
     process_all_files(input_folder, template_file, mappings, output_folder, append_text)
