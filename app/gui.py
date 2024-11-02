@@ -111,7 +111,7 @@ class MapperApp(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Mapper")
-        self.geometry("400x300")
+        self.geometry("400x315")
 
         # Create Tab Control
         self.tab_control = ttk.Notebook(self)
