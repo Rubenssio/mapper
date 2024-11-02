@@ -1,3 +1,4 @@
+import threading
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 from processing import run_processing
@@ -52,10 +53,13 @@ class InputTab(tk.Frame):
 
 
 class OutputTab(tk.Frame):
-    def __init__(self, parent):
+    def __init__(self, parent, app):
+        """Initialize with a reference to the main app."""
         super().__init__(parent)
+        self.app = app  # Store a reference to the main app instance
         self.suffix_entry = None
         self.output_folder = tk.StringVar(value="")
+        self.spinner = None
 
         self.create_widgets()
 
@@ -79,14 +83,28 @@ class OutputTab(tk.Frame):
         self.suffix_entry.grid(row=3, column=0, sticky="w", padx=5, pady=(0, 10))
 
         # Start Button
-        tk.Button(frame, text="Start Processing", command=self.master.master.start_processing).grid(
+        tk.Button(frame, text="Start Processing", command=self.start_processing_thread).grid(
             row=4, column=0, sticky="w", padx=5, pady=(50, 0)
         )
+
+        # Spinner (hidden by default)
+        self.spinner = ttk.Progressbar(frame, mode='indeterminate')
+        self.spinner.grid(row=5, column=0, sticky="w", padx=5, pady=(5, 10))
+        self.spinner.grid_remove()  # Hide initially
 
     def select_output_folder(self):
         folder_path = filedialog.askdirectory(title="Select Output Folder")
         if folder_path:
             self.output_folder.set(folder_path)
+
+    def start_processing_thread(self):
+        """Start processing in a separate thread to keep the UI responsive."""
+        processing_thread = threading.Thread(target=self.app.start_processing)
+        processing_thread.start()
+
+        # Start and show the spinner
+        self.spinner.grid()  # Show spinner
+        self.spinner.start()
 
 
 class MapperApp(tk.Tk):
@@ -98,13 +116,14 @@ class MapperApp(tk.Tk):
         # Create Tab Control
         self.tab_control = ttk.Notebook(self)
         self.input_tab = InputTab(self.tab_control)
-        self.output_tab = OutputTab(self.tab_control)
+        self.output_tab = OutputTab(self.tab_control, self)  # Pass main app instance
 
         self.tab_control.add(self.input_tab, text="Input")
         self.tab_control.add(self.output_tab, text="Output")
         self.tab_control.pack(expand=1, fill="both")
 
     def start_processing(self):
+        """Method to handle processing, including starting and stopping spinner."""
         # Fetch user inputs from both tabs
         input_folder = self.input_tab.input_folder.get()
         template_file = self.input_tab.template_file.get()
@@ -115,6 +134,8 @@ class MapperApp(tk.Tk):
         # Check if all fields are provided
         if not input_folder or not template_file or not mapping_file or not output_folder:
             messagebox.showerror("Missing Input", "Please ensure all input fields are filled.")
+            self.output_tab.spinner.stop()
+            self.output_tab.spinner.grid_remove()
             return
 
         try:
@@ -133,6 +154,11 @@ class MapperApp(tk.Tk):
         except Exception as e:
             # Handle any errors
             messagebox.showerror("Error", f"An error occurred during processing: {str(e)}")
+
+        finally:
+            # Stop and hide the spinner
+            self.output_tab.spinner.stop()
+            self.output_tab.spinner.grid_remove()
 
 
 if __name__ == "__main__":
