@@ -45,10 +45,21 @@ def clear_external_links(workbook):
         del workbook.externals
 
 
-def process_all_files(input_folder, template_file, mappings, output_folder, append_text=""):
+def process_all_files(
+        input_folder,
+        template_file,
+        mappings,
+        output_folder,
+        append_text,
+        stop_check,
+):
     input_files = [f for f in os.listdir(input_folder) if f.endswith(('.xlsx', '.xls', 'xlsm'))]
 
     for input_file in input_files:
+        if stop_check():  # Check if a stop has been requested
+            print("Processing stopped by user.")
+            break
+
         input_path = os.path.join(input_folder, input_file)
 
         # Process the input file with the template
@@ -57,7 +68,7 @@ def process_all_files(input_folder, template_file, mappings, output_folder, appe
         # Clear any external links
         clear_external_links(processed_workbook)
 
-        # Generate output file name (original name + append text)
+        # Generate output file name
         output_file_name = f"{os.path.splitext(input_file)[0]}{append_text}.xlsx"
 
         # Save the processed file to the output folder
@@ -66,6 +77,6 @@ def process_all_files(input_folder, template_file, mappings, output_folder, appe
         print(f"Processed: {input_file} -> {output_file_name}")
 
 
-def run_processing(input_folder, template_file, mapping_file, output_folder, append_text="_processed"):
+def run_processing(input_folder, template_file, mapping_file, output_folder, append_text, stop_check):
     mappings = load_mappings(mapping_file)
-    process_all_files(input_folder, template_file, mappings, output_folder, append_text)
+    process_all_files(input_folder, template_file, mappings, output_folder, append_text, stop_check)

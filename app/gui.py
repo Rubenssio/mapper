@@ -54,12 +54,12 @@ class InputTab(tk.Frame):
 
 class OutputTab(tk.Frame):
     def __init__(self, parent, app):
-        """Initialize with a reference to the main app."""
         super().__init__(parent)
-        self.app = app  # Store a reference to the main app instance
+        self.app = app
         self.suffix_entry = None
         self.output_folder = tk.StringVar(value="")
         self.spinner = None
+        self.start_stop_button = None  # Track the Start/Stop button
 
         self.create_widgets()
 
@@ -82,10 +82,9 @@ class OutputTab(tk.Frame):
         self.suffix_entry.insert(0, "_processed")  # Default value
         self.suffix_entry.grid(row=3, column=0, sticky="w", padx=5, pady=(0, 10))
 
-        # Start Button
-        tk.Button(frame, text="Start Processing", command=self.start_processing_thread).grid(
-            row=4, column=0, sticky="w", padx=5, pady=(50, 0)
-        )
+        # Start/Stop Button
+        self.start_stop_button = tk.Button(frame, text="Start Processing", command=self.toggle_processing)
+        self.start_stop_button.grid(row=4, column=0, sticky="w", padx=5, pady=(50, 0))
 
         # Spinner (hidden by default)
         self.spinner = ttk.Progressbar(frame, mode='indeterminate')
@@ -97,14 +96,24 @@ class OutputTab(tk.Frame):
         if folder_path:
             self.output_folder.set(folder_path)
 
-    def start_processing_thread(self):
-        """Start processing in a separate thread to keep the UI responsive."""
-        processing_thread = threading.Thread(target=self.app.start_processing)
-        processing_thread.start()
+    def toggle_processing(self):
+        if self.app.is_processing:
+            # Stop processing
+            self.app.stop_processing()
+            self.start_stop_button.config(text="Start Processing")
+        else:
+            # Start processing in a new thread
+            self.start_stop_button.config(text="Stop Processing")
+            self.start_processing_thread()
 
-        # Start and show the spinner
+    def start_processing_thread(self):
+        # Start the spinner
         self.spinner.grid()  # Show spinner
         self.spinner.start()
+
+        # Run the processing in a separate thread
+        processing_thread = threading.Thread(target=self.app.start_processing)
+        processing_thread.start()
 
 
 class MapperApp(tk.Tk):
@@ -116,14 +125,20 @@ class MapperApp(tk.Tk):
         # Create Tab Control
         self.tab_control = ttk.Notebook(self)
         self.input_tab = InputTab(self.tab_control)
-        self.output_tab = OutputTab(self.tab_control, self)  # Pass main app instance
+        self.output_tab = OutputTab(self.tab_control, self)
 
         self.tab_control.add(self.input_tab, text="Input")
         self.tab_control.add(self.output_tab, text="Output")
         self.tab_control.pack(expand=1, fill="both")
 
+        self.is_processing = False  # Track processing state
+        self.stop_requested = False  # Track if a stop is requested
+
     def start_processing(self):
-        """Method to handle processing, including starting and stopping spinner."""
+        # Set processing state
+        self.is_processing = True
+        self.stop_requested = False  # Reset stop flag
+
         # Fetch user inputs from both tabs
         input_folder = self.input_tab.input_folder.get()
         template_file = self.input_tab.template_file.get()
@@ -134,31 +149,46 @@ class MapperApp(tk.Tk):
         # Check if all fields are provided
         if not input_folder or not template_file or not mapping_file or not output_folder:
             messagebox.showerror("Missing Input", "Please ensure all input fields are filled.")
-            self.output_tab.spinner.stop()
-            self.output_tab.spinner.grid_remove()
+            self.stop_processing_ui_update()
             return
 
         try:
-            # Call the processing logic
+            # Call the processing logic with stop check
             run_processing(
                 input_folder,
                 template_file,
                 mapping_file,
                 output_folder,
                 append_text,
+                self.stop_requested_check,
             )
 
-            # Display success message
-            messagebox.showinfo("Success", "Processing complete! Files have been saved to the output folder.")
+            # Display success message if completed
+            if not self.stop_requested:
+                messagebox.showinfo("Success", "Processing complete! Files have been saved to the output folder.")
 
         except Exception as e:
             # Handle any errors
             messagebox.showerror("Error", f"An error occurred during processing: {str(e)}")
 
         finally:
-            # Stop and hide the spinner
-            self.output_tab.spinner.stop()
-            self.output_tab.spinner.grid_remove()
+            # Stop processing UI update
+            self.stop_processing_ui_update()
+
+    def stop_processing_ui_update(self):
+        """UI cleanup after processing stops."""
+        self.output_tab.spinner.stop()
+        self.output_tab.spinner.grid_remove()
+        self.output_tab.start_stop_button.config(text="Start Processing")
+        self.is_processing = False
+
+    def stop_processing(self):
+        """Sets stop_requested flag to true to signal the processing loop to stop."""
+        self.stop_requested = True
+
+    def stop_requested_check(self):
+        """Check if stop has been requested and stop processing if true."""
+        return self.stop_requested
 
 
 if __name__ == "__main__":
