@@ -122,6 +122,9 @@ class MapperApp(tk.Tk):
         self.title("Mapper")
         self.geometry("400x315")
 
+        # Set the icon
+        self.iconbitmap("mapper.ico")
+
         # Create Tab Control
         self.tab_control = ttk.Notebook(self)
         self.input_tab = InputTab(self.tab_control)
